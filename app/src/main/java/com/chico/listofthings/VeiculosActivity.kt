@@ -2,8 +2,11 @@ package com.chico.listofthings
 
 import android.os.Bundle
 import android.util.Log
+import android.view.Menu
+import android.view.MenuItem
 import android.view.View
 import android.view.ViewGroup
+import android.widget.AdapterView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.chico.listofthings.adapter.VeiculosAdapter
@@ -38,16 +41,37 @@ class VeiculosActivity : AppCompatActivity() {
         novo_veiculo.setOnClickListener {
             AdicionaVeiculoDialog(viewDaActivity as ViewGroup, this)
                 .adicionaVeiculo { novoVeiculo ->
-                    if (listaId.contains(novoVeiculo.id)) {
-                        Toast.makeText(
-                            this, "Esse veículo já existe",
-                            Toast.LENGTH_LONG
-                        ).show()
-                    } else {
-                        adicionaVeiculoFirestore(novoVeiculo)
-                        atualizaLista()
-                    }
+                    enviaVeiculo(novoVeiculo)
                 }
+        }
+    }
+
+    private fun adicionaVeiculoStorage(veiculo: Veiculo) {
+        val data = veiculo.toString().toByteArray()
+        val arquivoRef: StorageReference = mStorageRef.child(veiculo.id + ".csv")
+
+        arquivoRef.putBytes(data)
+            .addOnSuccessListener {   // Get a URL to the uploaded content
+                Log.d(
+                    "Teste", "Documento adicionado no storage com o ID: "
+                            + veiculo.id + ".csv"
+                )
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Erro!", Toast.LENGTH_LONG).show()
+            }
+    }
+
+    private fun enviaVeiculo(veiculo: Veiculo) {
+        if (listaId.contains(veiculo.id)) {
+            Toast.makeText(
+                this, "Esse veículo já existe. Não é necessário enviar",
+                Toast.LENGTH_LONG
+            ).show()
+        } else {
+            adicionaVeiculoFirestore(veiculo)
+            adicionaVeiculoStorage(veiculo)
+            atualizaLista()
         }
     }
 
@@ -69,14 +93,68 @@ class VeiculosActivity : AppCompatActivity() {
         with(lista_veiculos) {
             adapter = adapterVeiculos
             setOnItemClickListener { _, _, posicao, _ ->
-                val veiculoClicado = veiculos[posicao]
-                AlteraVeiculoDialog(viewDaActivity as ViewGroup, this@VeiculosActivity)
-                    .mudaVeiculo(veiculoClicado) { veiculoAlterado ->
-                        adicionaVeiculoFirestore(veiculoAlterado)
-                        atualizaLista()
-                    }
+                alteraVeiculo(posicao)
+            }
+            setOnCreateContextMenuListener { menu, _, _ ->
+                menu.add(Menu.NONE, 1, Menu.NONE, "Remover")
             }
         }
+    }
+
+    override fun onContextItemSelected(item: MenuItem): Boolean {
+        val idDoMenu = item.itemId
+        if (idDoMenu == 1) {
+            removeVeiculo(item)
+
+        }
+        return super.onContextItemSelected(item)
+    }
+
+    private fun removeVeiculo(item: MenuItem) {
+        val adapterMenuInfo = item.menuInfo as AdapterView
+        .AdapterContextMenuInfo
+        val posicao = adapterMenuInfo.position
+        val veiculoClicadoId = veiculos[posicao].id
+        removeFirestore(veiculoClicadoId)
+
+        val arquivoRef: StorageReference = mStorageRef.child(veiculos[posicao].id + ".csv")
+        // Delete the file
+        arquivoRef.delete()
+            .addOnSuccessListener {
+                Toast.makeText(this@VeiculosActivity, "Documento deletado!", Toast.LENGTH_LONG)
+                    .show()
+            }
+            .addOnFailureListener {
+                Toast.makeText(this@VeiculosActivity, "Erro!", Toast.LENGTH_LONG)
+                    .show()
+            }
+
+
+    }
+
+    private fun removeFirestore(veiculoClicadoId: String?) {
+        db.collection(COLECAO).document(veiculoClicadoId!!)
+            .delete()
+            .addOnSuccessListener {
+                Toast.makeText(
+                    this@VeiculosActivity, "Veículo removido!"
+                    , Toast.LENGTH_LONG
+                ).show()
+                atualizaLista()
+            }
+            .addOnFailureListener { e ->
+                Log.w("Erro", "Error deleting document", e)
+            }
+    }
+
+    private fun alteraVeiculo(posicao: Int) {
+        val veiculoClicado = veiculos[posicao]
+        AlteraVeiculoDialog(viewDaActivity as ViewGroup, this@VeiculosActivity)
+            .mudaVeiculo(veiculoClicado) { veiculoAlterado ->
+                adicionaVeiculoFirestore(veiculoAlterado)
+                adicionaVeiculoStorage(veiculoAlterado)
+                atualizaLista()
+            }
     }
 
     private fun pegaVeiculos() {
@@ -94,7 +172,6 @@ class VeiculosActivity : AppCompatActivity() {
                 Log.d("Teste", "Error getting documents: ", exception)
             }
     }
-
 
     private fun adicionaVeiculoFirestore(veiculo: Veiculo) {
         db.collection(COLECAO).document(veiculo.id!!)
@@ -114,7 +191,6 @@ class VeiculosActivity : AppCompatActivity() {
                 }
 
     }
-
 
     private fun pegaIDs() {
         db.collection(COLECAO)
