@@ -8,6 +8,7 @@ import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import com.chico.listofthings.adapter.VeiculosAdapter
 import com.chico.listofthings.dialogs.AdicionaVeiculoDialog
+import com.chico.listofthings.dialogs.AlteraVeiculoDialog
 import com.chico.listofthings.modelo.Veiculo
 import com.google.firebase.firestore.FirebaseFirestore
 import com.google.firebase.storage.FirebaseStorage
@@ -37,10 +38,16 @@ class VeiculosActivity : AppCompatActivity() {
         novo_veiculo.setOnClickListener {
             AdicionaVeiculoDialog(viewDaActivity as ViewGroup, this)
                 .adicionaVeiculo { novoVeiculo ->
-                    adicionaVeiculoFirestore(novoVeiculo)
-                    atualizaLista()
+                    if (listaId.contains(novoVeiculo.id)) {
+                        Toast.makeText(
+                            this, "Esse veículo já existe",
+                            Toast.LENGTH_LONG
+                        ).show()
+                    } else {
+                        adicionaVeiculoFirestore(novoVeiculo)
+                        atualizaLista()
+                    }
                 }
-
         }
     }
 
@@ -55,7 +62,6 @@ class VeiculosActivity : AppCompatActivity() {
     }
 
     fun configuraLista() {
-
         //preparar o adapter
         adapterVeiculos = VeiculosAdapter(veiculos, this)
         pegaVeiculos()
@@ -64,7 +70,11 @@ class VeiculosActivity : AppCompatActivity() {
             adapter = adapterVeiculos
             setOnItemClickListener { _, _, posicao, _ ->
                 val veiculoClicado = veiculos[posicao]
-                //chamaDialogAlteracao(veiculoClicado,posicao)
+                AlteraVeiculoDialog(viewDaActivity as ViewGroup, this@VeiculosActivity)
+                    .mudaVeiculo(veiculoClicado) { veiculoAlterado ->
+                        adicionaVeiculoFirestore(veiculoAlterado)
+                        atualizaLista()
+                    }
             }
         }
     }
@@ -86,29 +96,23 @@ class VeiculosActivity : AppCompatActivity() {
     }
 
 
-    private fun adicionaVeiculoFirestore(novoVeiculo: Veiculo) {
-        if (listaId.contains(novoVeiculo.id)) {
-            Toast.makeText(
-                this, "Esse veículo já existe",
-                Toast.LENGTH_LONG
-            ).show()
-        } else {
-            db.collection(COLECAO).document(novoVeiculo.id!!)
-                .set(novoVeiculo)
-                .addOnSuccessListener {
-                    Toast.makeText(
-                        this, "Veiculo adicionado:" + novoVeiculo.id,
+    private fun adicionaVeiculoFirestore(veiculo: Veiculo) {
+        db.collection(COLECAO).document(veiculo.id!!)
+            .set(veiculo)
+            .addOnSuccessListener {
+                Toast.makeText(
+                    this, "Veiculo adicionado:" + veiculo.id,
+                    Toast.LENGTH_LONG
+                ).show()
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(
+                    this, "Erro ao adicionar o veículo. " +
+                            "Por favor, checar a conexão com a internet",
                         Toast.LENGTH_LONG
                     ).show()
                 }
-                .addOnFailureListener { e ->
-                    Toast.makeText(
-                        this, "Erro ao adicionar o veículo. " +
-                                "Por favor, checar a conexão com a internet",
-                        Toast.LENGTH_LONG
-                    ).show()
-                }
-        }
+
     }
 
 
