@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">Lista de veículos</string>
     <string name="plus_sign">+</string>
+    <string name="Id">Identificação : </string>
+    <string name="modelo">Modelo :</string>
+    <string name="placa">Placa :</string>
+    <string name="cor">Cor :</string>
 </resources>

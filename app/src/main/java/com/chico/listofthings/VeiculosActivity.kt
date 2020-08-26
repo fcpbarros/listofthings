@@ -6,6 +6,7 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.chico.listofthings.adapter.VeiculosAdapter
 import com.chico.listofthings.dialogs.AdicionaVeiculoDialog
 import com.chico.listofthings.modelo.Veiculo
 import com.google.firebase.firestore.FirebaseFirestore
@@ -25,6 +26,7 @@ class VeiculosActivity : AppCompatActivity() {
     private val viewDaActivity: View by lazy {
         window.decorView
     }
+    private lateinit var adapterVeiculos: VeiculosAdapter
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -36,11 +38,53 @@ class VeiculosActivity : AppCompatActivity() {
             AdicionaVeiculoDialog(viewDaActivity as ViewGroup, this)
                 .adicionaVeiculo { novoVeiculo ->
                     adicionaVeiculoFirestore(novoVeiculo)
-
+                    atualizaLista()
                 }
 
         }
     }
+
+    override fun onResume() {
+        super.onResume()
+        atualizaLista()
+    }
+
+    private fun atualizaLista() {
+        veiculos.clear()
+        configuraLista()
+    }
+
+    fun configuraLista() {
+
+        //preparar o adapter
+        adapterVeiculos = VeiculosAdapter(veiculos, this)
+        pegaVeiculos()
+
+        with(lista_veiculos) {
+            adapter = adapterVeiculos
+            setOnItemClickListener { _, _, posicao, _ ->
+                val veiculoClicado = veiculos[posicao]
+                //chamaDialogAlteracao(veiculoClicado,posicao)
+            }
+        }
+    }
+
+    private fun pegaVeiculos() {
+        db.collection(COLECAO)
+            .get()
+            .addOnSuccessListener { result ->
+                for (document in result) {
+                    Log.d("Teste", "${document.id} => ${document.data}")
+                    val amostra = document.toObject(Veiculo::class.java)
+                    veiculos.add(amostra)
+                    adapterVeiculos.notifyDataSetChanged()
+                }
+            }
+            .addOnFailureListener { exception ->
+                Log.d("Teste", "Error getting documents: ", exception)
+            }
+    }
+
 
     private fun adicionaVeiculoFirestore(novoVeiculo: Veiculo) {
         if (listaId.contains(novoVeiculo.id)) {

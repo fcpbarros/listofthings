@@ -9,7 +9,7 @@
         android:orientation="vertical">
 
         <ListView
-            android:id="@+id/lista_transacoes_listview"
+            android:id="@+id/lista_veiculos"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:divider="@null"
