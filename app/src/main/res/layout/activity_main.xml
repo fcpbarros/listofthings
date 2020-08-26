@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:fab="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
@@ -18,37 +17,20 @@
 
     </LinearLayout>
 
-    <com.github.clans.fab.FloatingActionMenu
-        android:id="@+id/lista_transacoes_adiciona_menu"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:layout_alignParentRight="true"
+    <Button
+        android:id="@+id/novo_veiculo"
+        android:layout_width="56dp"
+        android:layout_height="56dp"
+        android:layout_alignParentEnd="true"
         android:layout_alignParentBottom="true"
-        android:paddingLeft="10dp"
-        android:paddingRight="10dp"
-        android:paddingBottom="10dp"
-        fab:menu_backgroundColor="#ccffff"
-        fab:menu_colorNormal="#02508E"
-        fab:menu_colorPressed="#02508E"
-        fab:menu_colorRipple="#02508E"
-        fab:menu_labels_colorNormal="#fff"
-        fab:menu_labels_ellipsize="end"
-        fab:menu_labels_singleLine="true"
-        fab:menu_labels_textColor="#fff">
+        android:layout_marginEnd="16dp"
+        android:layout_marginBottom="16dp"
+        android:background="@drawable/fundo"
+        android:elevation="6dp"
+        android:stateListAnimator="@null"
+        android:text="@string/plus_sign"
+        android:textColor="#fff"
+        android:textSize="40sp" />
 
-
-        <com.github.clans.fab.FloatingActionButton
-            android:id="@+id/lista_transacoes_adiciona_veiculo"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src=""
-            fab:fab_colorNormal=""
-            fab:fab_colorPressed="#2945fc"
-            fab:fab_colorRipple="#3216e2"
-            fab:fab_label=""
-            fab:fab_size="mini" />
-
-
-    </com.github.clans.fab.FloatingActionMenu>
 
 </RelativeLayout>
