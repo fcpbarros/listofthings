@@ -46,6 +46,11 @@ class VeiculosActivity : AppCompatActivity() {
         }
     }
 
+    override fun onResume() {
+        super.onResume()
+        atualizaLista()
+    }
+
     private fun adicionaVeiculoStorage(veiculo: Veiculo) {
         val data = veiculo.toString().toByteArray()
         val arquivoRef: StorageReference = mStorageRef.child(veiculo.id + ".csv")
@@ -75,10 +80,6 @@ class VeiculosActivity : AppCompatActivity() {
         }
     }
 
-    override fun onResume() {
-        super.onResume()
-        atualizaLista()
-    }
 
     private fun atualizaLista() {
         veiculos.clear()
